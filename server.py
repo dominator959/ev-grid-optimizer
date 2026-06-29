@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, send_from_directory
+from flask import Flask, jsonify, request, render_template
 import os
 from datetime import datetime
 from db_connection import get_db_connection
@@ -33,7 +33,14 @@ def get_stations():
         return jsonify({'error': 'Database offline'}), 500
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT * FROM charging_stations")
+        # Calculate load dynamically using a JOIN to bypass trigger requirement
+        cursor.execute("""
+            SELECT s.station_id, s.city, s.location_area, s.max_grid_capacity_kw,
+                   COALESCE(SUM(CASE WHEN c.status = 'Occupied' THEN c.power_output_kw ELSE 0 END), 0) AS current_load_kw
+            FROM charging_stations s
+            LEFT JOIN chargers c ON s.station_id = c.station_id
+            GROUP BY s.station_id, s.city, s.location_area, s.max_grid_capacity_kw
+        """)
         stations = cursor.fetchall()
         return jsonify(stations)
     except mysql.connector.Error as err:
@@ -94,7 +101,6 @@ def book_slot():
         return jsonify({'error': 'Database offline'}), 500
     cursor = conn.cursor()
     try:
-        # Convert strings to datetime objects
         start_dt = datetime.strptime(start_str, "%Y-%m-%dT%H:%M")
         end_dt = datetime.strptime(end_str, "%Y-%m-%dT%H:%M")
         
@@ -103,6 +109,9 @@ def book_slot():
         success_status = result_args[4]
         
         if success_status == 1:
+            # Re-update the charger status to 'Occupied' for immediate load visualization test
+            cursor.execute("UPDATE chargers SET status = 'Occupied' WHERE charger_id = %s", (charger_id,))
+            conn.commit()
             return jsonify({'success': True, 'message': 'Booking confirmed successfully!'})
         else:
             return jsonify({'success': False, 'error': 'Booking failed. Charger occupied or timing conflict.'}), 400
