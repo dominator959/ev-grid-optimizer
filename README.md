@@ -4,6 +4,17 @@
 
 ---
 
+## 📸 Screenshots
+
+### Live Monitoring Dashboard
+![Live Monitoring](assets/dashboard_monitoring.png)
+
+### Booking Scheduling Panel
+![Booking Scheduling](assets/dashboard_booking.png)
+
+---
+
+
 ## 🚀 Key Features
 
 * **3NF Database Schema**: Fully normalized database layout to eliminate update anomalies and secure transaction history.
@@ -90,11 +101,40 @@ python server.py
 ```
 Open **`http://127.0.0.1:5000`** in your browser to access the dynamic web interface.
 
-### Option B: Run the Command-Line Test Suite
+### Option B: Run via Streamlit (Alternative UI)
+Install Streamlit and launch:
+```bash
+pip install streamlit
+streamlit run streamlit_app.py
+```
+
+### Option C: Run the Command-Line Test Suite
 To test transactions and operations directly from the terminal, run:
 ```bash
 python app.py
 ```
+
+---
+
+## ☁️ Deploying Live on Streamlit Cloud
+
+You can host this dashboard completely live on **Streamlit Community Cloud** using the following steps:
+
+1. **Host MySQL Online**: Set up a free MySQL instance on a cloud provider like **Aiven.io** or **Clever Cloud**.
+2. **Import Schema**: Connect your MySQL Workbench to the new online host, and execute **[schema.sql](schema.sql)** to populate the tables and triggers.
+3. **Deploy on Streamlit**:
+   - Connect your GitHub repository to [Streamlit Community Cloud](https://share.streamlit.io/).
+   - Set the main file path to `streamlit_app.py`.
+4. **Configure Secrets**: In the Streamlit app settings, open the **Secrets** panel and insert your database credentials:
+   ```toml
+   DB_HOST = "your-cloud-host.com"
+   DB_NAME = "EV_Grid_Optimizer"
+   DB_USER = "your-database-user"
+   DB_PASS = "your-database-password"
+   DB_PORT = "3306"
+   ```
+5. **Add to Description**: Once deployed, copy your live Streamlit site link and add it to your GitHub repository details!
+
 
 ---
 
