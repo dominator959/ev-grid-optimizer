@@ -1,0 +1,3 @@
+# Exclude CSS and JavaScript files from GitHub's language stats so it shows as a Python/SQL project
+static/** linguist-vendored
+templates/** linguist-vendored
