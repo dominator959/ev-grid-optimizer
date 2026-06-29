@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage public EV charging schedules, view dynamic peak/off-peak WAPDA tariffs, and monitor real-time power grid distribution load management.">
+    <title>Smart EV Charging Network & Grid Optimizer</title>
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS Stylesheets -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
+                <div class="brand-text">
+                    <h1>Smart EV Public Charging Network</h1>
+                    <p class="subtitle">Pakistan Power Grid Optimizer (NEPRA / K-Electric / WAPDA)</p>
+                </div>
+            </div>
+            <div class="grid-status" id="gridStatusIndicator">
+                <span class="status-dot green"></span>
+                <span class="status-label">Grid Connected (Peak: 17:00-23:00)</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- LEFT COLUMN: Grid load & live statuses -->
+        <section class="dashboard-column" aria-labelledby="grid-monitoring-title">
+            <div class="card glass-card">
+                <h2 id="grid-monitoring-title"><i class="fa-solid fa-chart-line icon-accent"></i> Station Grid Load Management</h2>
+                <div class="stations-list" id="stationsList">
+                    <!-- Loaded dynamically via javascript -->
+                    <div class="skeleton-loader"></div>
+                    <div class="skeleton-loader"></div>
+                </div>
+            </div>
+
+            <div class="card glass-card scrollable-card">
+                <h2><i class="fa-solid fa-plug icon-accent"></i> Charger Status Board</h2>
+                <div class="chargers-grid" id="chargersList">
+                    <!-- Loaded dynamically via javascript -->
+                    <div class="skeleton-loader-row"></div>
+                    <div class="skeleton-loader-row"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: Bookings & Dynamic Tariff calculator -->
+        <section class="dashboard-column" aria-labelledby="booking-engine-title">
+            <div class="card glass-card highlight-card">
+                <h2><i class="fa-solid fa-file-invoice-dollar icon-accent"></i> Pakistan Live Tariff Grid</h2>
+                <div class="tariff-visualizer">
+                    <div class="tariff-pricing">
+                        <div class="price-bubble" id="currentRateBubble">
+                            <span class="price-val">PKR 50.00</span>
+                            <span class="price-lbl">per kWh</span>
+                        </div>
+                        <div class="tariff-mode" id="tariffModeDisplay">
+                            <span class="badge off-peak">Off-Peak Hours</span>
+                        </div>
+                    </div>
+                    <div class="tariff-schedule">
+                        <div class="schedule-period off-peak-period active">
+                            <span>Off-Peak (11:00 PM - 5:00 PM)</span>
+                            <strong>PKR 50.00 / kWh</strong>
+                        </div>
+                        <div class="schedule-period peak-period">
+                            <span>Peak Tariff (5:00 PM - 11:00 PM)</span>
+                            <strong>PKR 75.00 / kWh</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card glass-card">
+                <h2 id="booking-engine-title"><i class="fa-solid fa-calendar-check icon-accent"></i> Book Charging Slot</h2>
+                <form id="bookingForm" class="booking-form">
+                    <div class="form-group">
+                        <label for="selectUser"><i class="fa-solid fa-user"></i> Select EV Owner</label>
+                        <select id="selectUser" required>
+                            <option value="" disabled selected>Select EV Owner...</option>
+                        </select>
+                        <div id="userWalletInfo" class="helper-text hidden"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="selectCharger"><i class="fa-solid fa-charging-station"></i> Select Available Charger</label>
+                        <select id="selectCharger" required>
+                            <option value="" disabled selected>Select Charger...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="inputStartTime"><i class="fa-regular fa-clock"></i> Start Time</label>
+                            <input type="datetime-local" id="inputStartTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputEndTime"><i class="fa-solid fa-hourglass-half"></i> End Time</label>
+                            <input type="datetime-local" id="inputEndTime" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnSubmitBooking" class="btn-primary">
+                        <span class="btn-text">Confirm Reservation</span>
+                        <i class="fa-solid fa-circle-notch fa-spin btn-spinner hidden"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Notifications -->
+    <div id="notificationModal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3 id="modalTitle">Status Notification</h3>
+                <button type="button" class="btn-close" id="btnCloseModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="status-icon-container" id="modalIconContainer">
+                    <!-- Success/Error Icon -->
+                </div>
+                <p id="modalMessage">Success</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="btnOkModal">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Footer -->
+    <footer class="app-footer">
+        <p>&copy; 2026 Smart EV Public Charging Network. Local Pakistan Grid Integration System.</p>
+    </footer>
+
+    <!-- App JavaScript Logic -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
